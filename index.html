@@ -38,52 +38,6 @@
   font-size: 12px; /* ini akan kecilkan semua font */
 }
 
-/* ===== Overlay & Kartu Modal (berlaku ke semua .modal) ===== */
-.modal{
-  position: fixed; inset: 0; display: none;
-  align-items: center; justify-content: center;
-  background: rgba(0,0,0,.4); z-index: 9999;
-}
-.modal > .modal-content{
-  width: min(720px, 94vw);
-  max-height: min(92dvh, 92vh);
-  background: #fff; color:#111;
-  border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,.25);
-  display: flex; flex-direction: column; overflow: hidden;
-}
-.modal > .modal-content > h3{
-  margin: 0; padding: 12px 16px;
-  position: sticky; top: 0; background:#fff; z-index: 1;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-/* ===== Area isi yang bisa di-scroll ===== */
-.scroll-area{
-  flex: 1 1 auto;
-  overflow-y: auto; -webkit-overflow-scrolling: touch;
-  padding: 10px 16px; scroll-behavior: smooth;
-}
-
-/* ===== Footer tombol sticky ===== */
-.footer-actions{
-  position: sticky; bottom: 0; z-index: 1;
-  background:#fff; border-top:1px solid #e5e7eb;
-  padding: 10px 16px; display:flex; gap:8px; justify-content:flex-end; align-items:center;
-}
-@supports(padding:max(0px)){
-  .footer-actions{ padding-bottom: max(12px, env(safe-area-inset-bottom)); }
-}
-
-/* ===== Bantu: kalau ada kontainer tertentu yang panjang, jadikan scroll juga ===== */
-#kelasCheckboxContainer, #kelasCheckboxContainerNIS, #nisCheckboxContainer,
-#listKelasTersedia, #listKelasTujuan{
-  max-height: 48dvh; overflow: auto; -webkit-overflow-scrolling: touch; padding-right: 4px;
-}
-#selectSantriPindah{ min-height:160px; max-height:40dvh; overflow:auto; }
-
-/* Kunci body saat ada modal */
-.lock-scroll{ overflow: hidden !important; }	  
-
     button.lihat-quran-btn {
   all: unset; /* reset semua style bawaan */
   display: inline-block;
@@ -785,14 +739,10 @@ function tutupModal(id) {
 <div id="modalAdmin" class="modal" style="display:none;">
   <div class="modal-content">
     <h3>Masukkan Password Admin</h3>
-    <div class="scroll-area">
-      <label>Password Admin: <input type="password" id="adminPasswordInput"></label>
-      <p id="adminError" style="color:red;"></p>
-    </div>
-    <div class="footer-actions">
-      <button onclick="cekPasswordAdmin()">Submit</button>
-      <button onclick="tutupModal('modalAdmin')">Close</button>
-    </div>
+     <label>Password Admin: <input type="password" id="adminPasswordInput"></label>
+    <p id="adminError" style="color:red;"></p>
+    <button onclick="cekPasswordAdmin()">Submit</button>
+    <button onclick="tutupModal('modalAdmin')">Close</button>
   </div>
 </div>
 
@@ -800,154 +750,546 @@ function tutupModal(id) {
 <div id="modalDaftar" class="modal" style="display:none;">
   <div class="modal-content">
     <h3>Daftar User Kelas</h3>
-    <div class="scroll-area">
-      <label>Username: <input type="text" id="newUsername"></label><br>
-      <label>Password: <input type="password" id="newPassword"></label>
-      <br><br>
-      <label><input type="checkbox" onclick="toggleLihatPassword()"> Lihat Password</label>
-      <br><br>
-      <div id="kelasCheckboxContainer">🔄 Memuat daftar kelas...</div>
-      <p id="daftarError" style="color:red;margin-top:8px;"></p>
-      <p id="daftarSuccess" style="color:green;"></p>
-    </div>
-    <div class="footer-actions">
-      <button onclick="buatAkunBaru()">Create Account</button>
-      <button onclick="tutupModal('modalDaftar')">Close</button>
-    </div>
+    <label>Username: <input type="text" id="newUsername"></label><br>
+    <label>Password: <input type="password" id="newPassword"></label>
+    <br></br>
+    <label><input type="checkbox" onclick="toggleLihatPassword()"> Lihat Password</label><br><br>
+
+    <div id="kelasCheckboxContainer"
+     style="max-height:56vh; overflow:auto; -webkit-overflow-scrolling:touch; padding-right:4px;">
+  🔄 Memuat daftar kelas...
+</div><br>
+
+    <button onclick="buatAkunBaru()">Create Account</button>
+    <button onclick="tutupModal('modalDaftar')">Close</button>
+    <p id="daftarError" style="color:red;"></p>
+    <p id="daftarSuccess" style="color:green;"></p>
   </div>
 </div>
-<script>
-function lockBodyScroll(lock=true){
-  document.documentElement.classList.toggle('lock-scroll', lock);
-  document.body.classList.toggle('lock-scroll', lock);
-}
-function anyModalOpen(){
-  return !!document.querySelector('.modal[style*="display: flex"]');
-}
-function tutupModal(id){
-  const el = document.getElementById(id);
-  if (el) el.style.display = "none";
-  if (!anyModalOpen()) lockBodyScroll(false);
-}
 
-/* === fungsi existing, tambahkan 1 baris lockBodyScroll(true) saat buka === */
+	<script>
 function munculkanValidasiAdmin() {
   document.getElementById("modalAdmin").style.display = "flex";
   document.getElementById("adminPasswordInput").value = "";
   document.getElementById("adminError").textContent = "";
-  lockBodyScroll(true);
 }
 
+// Fungsi untuk cek password admin
+async function cekPasswordAdmin() {
+  const password = document.getElementById("adminPasswordInput").value;
+
+  if (!password) {
+    document.getElementById("adminError").textContent = "Password wajib diisi.";
+    return;
+  }
+
+  const response = await fetch('/api/cek-admin', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ password })
+  });
+
+  const result = await response.json();
+
+  if (response.status === 200) {
+    tutupModal("modalAdmin");
+    bukaFormDaftar(password); // password disimpan sementara
+  } else {
+    document.getElementById("adminError").textContent = result.message || "Gagal validasi.";
+  }
+}
+
+// Buka modal daftar setelah validasi admin sukses
 let adminPasswordGlobal = "";
 function bukaFormDaftar(adminPass) {
   adminPasswordGlobal = adminPass;
   document.getElementById("modalDaftar").style.display = "flex";
   document.getElementById("daftarError").textContent = "";
   document.getElementById("daftarSuccess").textContent = "";
-  lockBodyScroll(true);
-  ambilDaftarKelas();
+  ambilDaftarKelas(); // Load daftar kelas dari GitHub
+}
+
+// Tutup modal
+function tutupModal(id) {
+  document.getElementById(id).style.display = "none";
+}
+
+// Toggle lihat password
+function toggleLihatPassword() {
+  const pwField = document.getElementById("newPassword");
+  pwField.type = pwField.type === "password" ? "text" : "password";
 }
 </script>
 
-<!-- Tambah Kelas (Password) -->
-<div id="modalTambahKelasPassword" class="modal" style="display:none;">
+  <script>
+async function ambilDaftarKelas() {
+  const container = document.getElementById("kelasCheckboxContainer");
+  container.innerHTML = "🔄 Memuat daftar kelas...";
+
+  try {
+    const res = await fetch("https://api.github.com/repos/afmmtb/server/contents");
+    const data = await res.json();
+
+    // Filter nama file seperti: kelas_1.json
+    const kelasFiles = data.filter(file => /^kelas_\d+\.json$/.test(file.name));
+
+    if (kelasFiles.length === 0) {
+      container.innerHTML = "❌ Tidak ada file kelas_{}.json ditemukan.";
+      return;
+    }
+
+    container.innerHTML = ""; // Bersihkan
+
+    kelasFiles.forEach(file => {
+      const kelas = file.name.replace(".json", ""); // contoh: kelas_1
+      const label = document.createElement("label");
+      label.innerHTML = `<input type="checkbox" value="${kelas}"> ${kelas}<br>`;
+      container.appendChild(label);
+    });
+  } catch (err) {
+    container.innerHTML = "❌ Gagal memuat kelas.";
+    console.error("Gagal fetch kelas:", err);
+  }
+}
+</script>
+  
+  <script>
+    async function ambilDaftarKelas() {
+  const container = document.getElementById("kelasCheckboxContainer");
+  container.innerHTML = "🔄 Memuat daftar kelas...";
+
+  try {
+    const res = await fetch("/api/ambil-kelas");
+    const kelasList = await res.json();
+
+    if (!Array.isArray(kelasList) || kelasList.length === 0) {
+      container.innerHTML = "❌ Tidak ada kelas ditemukan.";
+      return;
+    }
+
+    container.innerHTML = ""; // Bersihkan
+
+    kelasList.forEach(kelas => {
+      const label = document.createElement("label");
+      label.innerHTML = `<input type="checkbox" value="${kelas}"> ${kelas}<br>`;
+      container.appendChild(label);
+    });
+  } catch (err) {
+    container.innerHTML = "❌ Gagal memuat kelas.";
+    console.error("Gagal fetch kelas:", err);
+  }
+}
+  </script>
+
+  <script>
+async function buatAkunBaru() {
+  const username = document.getElementById("newUsername").value.trim();
+  const password = document.getElementById("newPassword").value.trim();
+  const kelasChecked = Array.from(
+    document.querySelectorAll('#kelasCheckboxContainer input:checked')
+  ).map(cb => cb.value);
+
+  const errorEl = document.getElementById("daftarError");
+  const successEl = document.getElementById("daftarSuccess");
+
+  errorEl.textContent = "";
+  successEl.textContent = "";
+
+  if (!username || !password || kelasChecked.length === 0) {
+    errorEl.textContent = "Semua kolom dan kelas wajib diisi.";
+    return;
+  }
+
+  const payload = {
+    username,
+    password,
+    kelas: kelasChecked,
+    adminPassword: adminPasswordGlobal
+  };
+
+  try {
+    const res = await fetch('/api/daftar-khusus', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await res.json();
+
+    if (res.status === 200) {
+      successEl.textContent = "✅ Akun berhasil dibuat.";
+      // Reset form
+      document.getElementById("newUsername").value = "";
+      document.getElementById("newPassword").value = "";
+      document.querySelectorAll('#kelasCheckboxContainer input:checked')
+              .forEach(cb => cb.checked = false);
+    } else {
+      errorEl.textContent = result.message || "❌ Gagal membuat akun.";
+    }
+  } catch (err) {
+    console.error("Gagal kirim data:", err);
+    errorEl.textContent = "Terjadi kesalahan jaringan.";
+  }
+}
+</script>
+
+
+<!-- Tambah Kelas -->
+    <div id="modalTambahKelasPassword" class="modal" style="display:none;">
   <div class="modal-content">
     <h3>Verifikasi Admin</h3>
-    <div class="scroll-area">
-      <label>Password Admin: <input type="password" id="inputPasswordTambahKelas"></label>
-      <p id="statusPasswordTambahKelas" style="color:red;"></p>
-    </div>
-    <div class="footer-actions">
-      <button onclick="verifikasiAdminTambahKelas()">Submit</button>
-      <button onclick="tutupModal('modalTambahKelasPassword')">Close</button>
-    </div>
+    <label>Password Admin: <input type="password" id="inputPasswordTambahKelas"></label>
+    <p id="statusPasswordTambahKelas" style="color:red;"></p>
+    <button onclick="verifikasiAdminTambahKelas()">Submit</button>
+    <button onclick="tutupModal('modalTambahKelasPassword')">Close</button>
   </div>
 </div>
 
-<!-- Form Tambah Kelas -->
-<div id="modalFormTambahKelas" class="modal" style="display:none;">
+
+    <div id="modalFormTambahKelas" class="modal" style="display:none;">
   <div class="modal-content">
     <h3>Tambah Kelas Baru</h3>
-    <div class="scroll-area">
-      <p style="margin:.2rem 0 .4rem;"><b>Kelas yang sudah ada:</b></p>
-      <ul id="listKelasTersedia" style="margin:0; padding-left:18px;"></ul>
-      <hr style="margin:10px 0;">
-      <input type="number" id="inputNomorKelasBaruTambah" placeholder="Contoh: 7" />
-      <p id="statusTambahKelasBaru" style="color:red;margin-top:8px;"></p>
-    </div>
-    <div class="footer-actions">
-      <button onclick="submitTambahKelasBaru()">Buat</button>
-      <button onclick="tutupModal('modalFormTambahKelas')">Close</button>
-    </div>
+    <p>Kelas yang sudah ada:</p>
+    <ul id="listKelasTersedia"
+    style="max-height:56vh; overflow:auto; -webkit-overflow-scrolling:touch; margin:0; padding-left:18px;">
+</ul>
+    <input type="number" id="inputNomorKelasBaruTambah" placeholder="Contoh: 7" />
+    <button onclick="submitTambahKelasBaru()">Buat</button>
+    <button onclick="tutupModal('modalFormTambahKelas')">Close</button>
+    <p id="statusTambahKelasBaru" style="color:red;"></p>
   </div>
 </div>
-<script>
-function bukaModalTambahKelas(){
+
+
+	<script>
+let passwordTambahKelas = "";
+
+function bukaModalTambahKelas() {
   document.getElementById("modalTambahKelasPassword").style.display = "flex";
-  lockBodyScroll(true);
 }
-async function tampilkanFormTambahKelasBaru(){
-  /* ... existing fetch daftar kelas ... */
-  document.getElementById("modalFormTambahKelas").style.display = "flex";
-  lockBodyScroll(true);
+
+function tutupModal(id) {
+  document.getElementById(id).style.display = "none";
+}
+
+async function verifikasiAdminTambahKelas() {
+  const passInput = document.getElementById("inputPasswordTambahKelas").value;
+  const status = document.getElementById("statusPasswordTambahKelas");
+  status.textContent = "⏳ Mengecek...";
+
+  const res = await fetch("/api/cek-admin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password: passInput })
+  });
+
+  const result = await res.json();
+  if (res.ok) {
+    passwordTambahKelas = passInput;
+    tutupModal("modalTambahKelasPassword");
+    tampilkanFormTambahKelasBaru();
+  } else {
+    status.textContent = result.message || "❌ Password salah.";
+  }
+}
+
+async function tampilkanFormTambahKelasBaru() {
+  const list = document.getElementById("listKelasTersedia");
+  const status = document.getElementById("statusTambahKelasBaru");
+  document.getElementById("inputNomorKelasBaruTambah").value = "";
+  list.innerHTML = "<li>🔄 Mengambil data kelas...</li>";
+  status.textContent = "";
+
+  try {
+    const res = await fetch("/api/ambil-kelas");
+    const kelas = await res.json();
+    list.innerHTML = "";
+    kelas.forEach(nama => {
+      const li = document.createElement("li");
+      li.textContent = nama;
+      list.appendChild(li);
+    });
+
+    document.getElementById("modalFormTambahKelas").style.display = "flex";
+  } catch (err) {
+    list.innerHTML = "<li>❌ Gagal mengambil daftar kelas.</li>";
+  }
+}
+
+async function submitTambahKelasBaru() {
+  const nomor = document.getElementById("inputNomorKelasBaruTambah").value.trim();
+  const status = document.getElementById("statusTambahKelasBaru");
+
+  if (!nomor) {
+    status.textContent = "❗ Nomor kelas harus diisi.";
+    return;
+  }
+
+  status.textContent = "⏳ Mengirim permintaan...";
+  const res = await fetch("/api/buat-kelas-baru", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ namaFile: `kelas_${nomor}.json` })
+  });
+
+  const result = await res.json();
+  if (res.ok) {
+    status.style.color = "green";
+    status.textContent = "✅ Kelas berhasil dibuat.";
+    setTimeout(() => tutupModal("modalFormTambahKelas"), 1500);
+  } else {
+    status.style.color = "red";
+    status.textContent = result.message || "❌ Gagal membuat kelas.";
+  }
 }
 </script>
 
 
-<!-- Validasi Admin NIS -->
+<!-- Tombol Daftar User NIS -->
+<!-- Modal Validasi Admin -->
 <div id="modalAdminNIS" class="modal" style="display:none;">
   <div class="modal-content">
     <h3>Validasi Admin</h3>
-    <div class="scroll-area">
-      <label>Password Admin: <input type="password" id="adminPasswordInputNIS"></label>
-      <p id="adminErrorNIS" style="color:red;"></p>
-    </div>
-    <div class="footer-actions">
-      <button onclick="cekPasswordAdminNIS()">Submit</button>
-      <button onclick="tutupModal('modalAdminNIS')">Close</button>
-    </div>
+    <label>Password Admin: <input type="password" id="adminPasswordInputNIS"></label>
+    <p id="adminErrorNIS" style="color:red;"></p>
+    <button onclick="cekPasswordAdminNIS()">Submit</button>
+    <button onclick="tutupModal('modalAdminNIS')">Close</button>
   </div>
 </div>
 
-<!-- Daftar User NIS -->
+<!-- Modal Daftar User NIS -->
 <div id="modalDaftarNIS" class="modal" style="display:none;">
   <div class="modal-content">
     <h3>Daftar User NIS</h3>
-    <div class="scroll-area">
-      <label>Username: <input type="text" id="newUsernameNIS"></label><br>
-      <label>Password: <input type="password" id="newPasswordNIS"></label><br>
-      <label><input type="checkbox" onclick="toggleLihatPasswordNIS()"> Lihat Password</label>
-      <br><br>
-      <div id="kelasCheckboxContainerNIS">🔄 Memuat daftar kelas...</div>
-      <br>
-      <div id="nisCheckboxContainer">🔄 Pilih kelas dahulu...</div>
-      <p id="daftarNISError" style="color:red;margin-top:8px;"></p>
-      <p id="daftarNISSuccess" style="color:green;"></p>
-    </div>
-    <div class="footer-actions">
-      <button onclick="buatUserNIS()">Create User NIS</button>
-      <button onclick="tutupModal('modalDaftarNIS')">Close</button>
-    </div>
+    <label>Username: <input type="text" id="newUsernameNIS"></label><br>
+    <label>Password: <input type="password" id="newPasswordNIS"></label><br>
+    <label><input type="checkbox" onclick="toggleLihatPasswordNIS()"> Lihat Password</label><br><br>
+
+    <div id="kelasCheckboxContainerNIS"
+     style="max-height:32vh; overflow:auto; -webkit-overflow-scrolling:touch; padding-right:4px;">
+  🔄 Memuat daftar kelas...
+</div><br>
+
+<div id="nisCheckboxContainer"
+     style="max-height:40vh; overflow:auto; -webkit-overflow-scrolling:touch; padding-right:4px;">
+  🔄 Pilih kelas dahulu...
+</div><br>
+
+    <button onclick="buatUserNIS()">Create User NIS</button>
+    <button onclick="tutupModal('modalDaftarNIS')">Close</button>
+    <p id="daftarNISError" style="color:red;"></p>
+    <p id="daftarNISSuccess" style="color:green;"></p>
   </div>
 </div>
+
 <script>
-function munculkanValidasiAdminNIS(){
+/* =========================
+   Helper kecil
+========================= */
+const _norm = v => String(v ?? '').trim().toLowerCase();
+const _fetchJson = async (url, opt) => {
+  const r = await fetch(url, opt);
+  let data = null;
+  try { data = await r.json(); } catch {}
+  if (!r.ok) throw new Error((data && (data.error || data.message)) || `${r.status} ${r.statusText}`);
+  return data;
+};
+
+let adminPasswordGlobalNIS = "";
+let usedNisSet = new Set(); // diisi dari /api/getUsersNis
+
+// Tampilkan modal validasi admin
+function munculkanValidasiAdminNIS() {
   document.getElementById("modalAdminNIS").style.display = "flex";
   document.getElementById("adminPasswordInputNIS").value = "";
   document.getElementById("adminErrorNIS").textContent = "";
-  lockBodyScroll(true);
 }
-async function bukaFormDaftarNIS(){
+
+// Cek password admin
+async function cekPasswordAdminNIS() {
+  const password = document.getElementById("adminPasswordInputNIS").value;
+  if (!password) { 
+    document.getElementById("adminErrorNIS").textContent = "Password wajib diisi."; 
+    return; 
+  }
+
+  try {
+    const res = await fetch('/api/cekAdminWali', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ password })
+    });
+    const result = await res.json();
+
+    if (res.status === 200) {
+      adminPasswordGlobalNIS = password;
+      tutupModal("modalAdminNIS");
+      bukaFormDaftarNIS();
+    } else {
+      document.getElementById("adminErrorNIS").textContent = result.message || "Gagal validasi.";
+    }
+  } catch (e) {
+    document.getElementById("adminErrorNIS").textContent = e.message || "Gagal validasi.";
+  }
+}
+
+// Buka modal daftar NIS
+async function bukaFormDaftarNIS() {
   document.getElementById("modalDaftarNIS").style.display = "flex";
   document.getElementById("daftarNISError").textContent = "";
   document.getElementById("daftarNISSuccess").textContent = "";
   document.getElementById("kelasCheckboxContainerNIS").innerHTML = "🔄 Memuat daftar kelas...";
   document.getElementById("nisCheckboxContainer").innerHTML = "🔄 Pilih kelas dahulu...";
-  lockBodyScroll(true);
-  /* ...existing: fetch usedNis + ambilDaftarKelasNIS()... */
+
+  // 1) Ambil daftar NIS yang SUDAH terdaftar agar bisa disembunyikan
+  try {
+    const { usedNis = [] } = await _fetchJson('/api/getUsersNis');
+    usedNisSet = new Set(usedNis.map(_norm));
+  } catch (e) {
+    // Kalau gagal, biarkan set kosong, UI tetap jalan
+    usedNisSet = new Set();
+    console.warn('Gagal ambil used NIS:', e);
+  }
+
+  // 2) Ambil daftar kelas
+  ambilDaftarKelasNIS();
+}
+
+// Tutup modal
+function tutupModal(id) { document.getElementById(id).style.display = "none"; }
+
+// Toggle password
+function toggleLihatPasswordNIS() {
+  const pwField = document.getElementById("newPasswordNIS");
+  pwField.type = pwField.type === "password" ? "text" : "password";
+}
+
+// Ambil daftar kelas
+async function ambilDaftarKelasNIS() {
+  const container = document.getElementById("kelasCheckboxContainerNIS");
+  container.innerHTML = "🔄 Memuat daftar kelas...";
+  try {
+    const res = await fetch("/api/ambil-kelas");
+    const kelasList = await res.json();
+    container.innerHTML = "";
+
+    (kelasList || []).forEach(kelas => {
+      const label = document.createElement("label");
+      // PERTAHANKAN UI: onchange tetap memanggil ambilDaftarNIS(kelas)
+      label.innerHTML = `<input type="checkbox" value="${kelas}" onchange="ambilDaftarNIS('${kelas}')"> ${kelas}<br>`;
+      container.appendChild(label);
+    });
+  } catch(err) {
+    container.innerHTML = "❌ Gagal memuat kelas.";
+    console.error(err);
+  }
+}
+
+// Ambil daftar NIS dari kelas TERPILIH (union), sembunyikan yang sudah terdaftar
+async function ambilDaftarNIS(/*kelasDiklik*/) {
+  const container = document.getElementById("nisCheckboxContainer");
+  container.innerHTML = "🔄 Memuat NIS...";
+
+  // Kumpulkan seluruh kelas yang sedang dicentang (UI dipertahankan: tetap pakai checkbox per kelas)
+  const kelasDipilih = [...document.querySelectorAll("#kelasCheckboxContainerNIS input[type=checkbox]:checked")].map(cb => cb.value);
+
+  if (!kelasDipilih.length) {
+    container.innerHTML = "🔄 Pilih kelas dahulu...";
+    return;
+  }
+
+  try {
+    // Ambil NIS tiap kelas secara paralel
+    const settled = await Promise.allSettled(
+      kelasDipilih.map(k => fetch(`/api/ambil-kelas-nis?kelas=${encodeURIComponent(k)}`).then(r => r.json()))
+    );
+
+    // Gabung unik per NIS dan FILTER yang sudah terdaftar
+    const mapByNis = new Map(); // key = norm(nis) -> {nis, nama}
+    for (const it of settled) {
+      if (it.status !== 'fulfilled' || !Array.isArray(it.value)) continue;
+      for (const s of it.value) {
+        const nisRaw = s?.nis ?? s?.NIS ?? s?.id ?? '';
+        const key = _norm(nisRaw);
+        if (!key) continue;
+        if (usedNisSet.has(key)) continue; // INI inti filter: jangan tampilkan NIS yang sudah terdaftar
+        if (!mapByNis.has(key)) {
+          mapByNis.set(key, { nis: String(nisRaw).trim(), nama: String(s?.nama ?? s?.name ?? '').trim() });
+        }
+      }
+    }
+
+    // Urutkan sederhana berdasar NIS
+    const items = [...mapByNis.values()].sort((a,b) => String(a.nis).localeCompare(String(b.nis), 'id'));
+
+    // PERTAHANKAN UI: render baris label + <br> seperti sebelumnya
+    container.innerHTML = "";
+    if (!items.length) {
+      container.innerHTML = "Tidak ada NIS baru pada kelas terpilih.<br>";
+      return;
+    }
+    items.forEach(santri => {
+      const label = document.createElement("label");
+      label.innerHTML = `<input type="checkbox" value="${santri.nis}"> ${santri.nis} - ${santri.nama}<br>`;
+      container.appendChild(label);
+    });
+  } catch(err) {
+    container.innerHTML = "❌ Gagal memuat NIS.";
+    console.error(err);
+  }
+}
+
+// Buat user NIS
+async function buatUserNIS() {
+  const username = document.getElementById("newUsernameNIS").value;
+  const password = document.getElementById("newPasswordNIS").value;
+
+  const kelasCheckboxes = document.querySelectorAll("#kelasCheckboxContainerNIS input[type=checkbox]:checked");
+  const nisCheckboxes = document.querySelectorAll("#nisCheckboxContainer input[type=checkbox]:checked");
+
+  if (!username || !password) { 
+    document.getElementById("daftarNISError").textContent = "Username & Password wajib diisi."; 
+    return; 
+  }
+  if (nisCheckboxes.length === 0) { 
+    document.getElementById("daftarNISError").textContent = "Pilih minimal 1 NIS."; 
+    return; 
+  }
+
+  const kelas = Array.from(kelasCheckboxes).map(c => c.value);
+  const nis = Array.from(nisCheckboxes).map(n => n.value);
+
+  // Safety kecil (front-end): pastikan tidak ada yang sudah used (harusnya sudah terseleksi)
+  const adaDup = nis.some(n => usedNisSet.has(_norm(n)));
+  if (adaDup) {
+    document.getElementById("daftarNISError").textContent = "Ada NIS yang sudah terdaftar. Muat ulang daftar lalu pilih lagi.";
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/daftarNisWali', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ username, password, kelas, nis, adminPassword: adminPasswordGlobalNIS })
+    });
+    const result = await res.json();
+
+    if (res.status === 200) {
+      document.getElementById("daftarNISSuccess").textContent = result.message || "Berhasil membuat user NIS.";
+      document.getElementById("daftarNISError").textContent = "";
+
+      // update usedNisSet agar NIS barusan langsung tidak tampil
+      nis.forEach(n => usedNisSet.add(_norm(n)));
+      // refresh daftar NIS sesuai kelas yang masih terpilih (UI tetap)
+      ambilDaftarNIS();
+    } else {
+      document.getElementById("daftarNISError").textContent = result.message || "Gagal membuat user NIS.";
+    }
+  } catch (err) {
+    document.getElementById("daftarNISError").textContent = err.message || "Gagal membuat user NIS.";
+  }
 }
 </script>
-
 
 
   
@@ -1222,40 +1564,29 @@ async function bukaFormDaftarNIS(){
 
 
 	<!-- Modal Pindah Kelas -->
-<div id="modalPindahKelas" class="modal" style="display:none;">
-  <div class="modal-content">
-    <h3 style="margin:0;display:flex;align-items:center;justify-content:space-between;">
-      <span>Pindah Kelas</span>
+<div id="modalPindahKelas" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);align-items:center;justify-content:center;z-index:9999;">
+  <div style="background:#fff;padding:16px;border-radius:10px;max-width:520px;width:92%;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <h3 style="margin:0;">Pindah Kelas</h3>
       <button id="closePindah" title="Tutup">✕</button>
-    </h3>
-
-    <div class="scroll-area">
-      <label><b>Pilih Santri (multi pilih):</b></label>
-      <select id="selectSantriPindah" multiple size="8" style="width:100%;margin:6px 0;"></select>
-
-      <div style="margin:8px 0;">
-        <label><b>Pilih Kelas Tujuan:</b></label>
-        <div id="listKelasTujuan" style="margin-top:6px;"></div>
-      </div>
-
-      <span id="statusPindah" style="font-size:.95rem;"></span>
     </div>
 
-    <div class="footer-actions">
+    <label><b>Pilih Santri (multi pilih):</b></label>
+    <select id="selectSantriPindah" multiple size="8" style="width:100%;margin:6px 0;"></select>
+
+    <div style="margin:8px 0;">
+      <label><b>Pilih Kelas Tujuan:</b></label>
+      <div id="listKelasTujuan"
+     style="margin-top:6px; max-height:40vh; overflow:auto; -webkit-overflow-scrolling:touch; padding-right:4px;">
+</div>
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center;margin-top:10px;">
       <button id="doPindah" style="padding:8px 12px;">Pindahkan</button>
-      <button onclick="tutupModal('modalPindahKelas')">Close</button>
+      <span id="statusPindah" style="font-size:.95rem;"></span>
     </div>
   </div>
 </div>
-
-<script>
-document.getElementById('btnPindahKelas')?.addEventListener('click',()=>{
-  const m=document.getElementById('modalPindahKelas');
-  m.style.display='flex';
-  lockBodyScroll(true);
-});
-document.getElementById('closePindah')?.addEventListener('click',()=>tutupModal('modalPindahKelas'));
-</script>
 
 <!-- Modal Overlay -->
 <div id="modalHapusSantri" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
