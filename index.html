@@ -11,16 +11,16 @@
 
   <!-- Favicon untuk browser -->
   <link rel="icon" href="./icon-192.png" type="image/png" sizes="192x192" />
-  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/afmmtb/web/refs/heads/main/rqhk.jpg" />
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/afmmtb/web/refs/heads/main/ppa.jpg" />
 
   <!-- Open Graph Meta Tags (untuk WhatsApp, FB, Telegram) -->
-  <meta property="og:title" content="Mutaba'ah Tahfizh Roudhotul Qur'an Hongkong" />
+  <meta property="og:title" content="Mutaba'ah Tahfidz PPA At Thohir" />
   <meta property="og:description" content="Mudah, simpel, akurat. Sesuai halaman Mushaf Madinah. Dilengkapi laporan otomatis." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://afmmtb.netlify.app/" />
 
   <!-- Gunakan gambar 512x512 -->
-  <meta property="og:image" content="https://raw.githubusercontent.com/afmmtb/web/refs/heads/main/logo.png" />
+  <meta property="og:image" content="https://raw.githubusercontent.com/afmmtb/web/refs/heads/main/ppa.jpg" />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="512" />
   <meta property="og:image:height" content="512" />
@@ -470,10 +470,12 @@ button.lihat-quran-btn:hover::after {
     
     <!-- Header Login (Logo + Judul) -->
     <div class="login-header">
-    <img src="https://raw.githubusercontent.com/afmmtb/web/main/rqhk.jpg" alt="Logo Mutaba'ah Tahfizh" />
+    <img src="https://raw.githubusercontent.com/afmmtb/web/main/ppa.jpg" alt="Logo Mutaba'ah Tahfizh" />
 	<br>
-   <h1 class="judul">&lt;span class="judul-atas"&gt;Mutaba'ah Tahfizh&lt;/span&gt;
-  &lt;span class="judul-bawah"&gt;Roudhotul Qur'an Hongkong&lt;/span&gt;</h1>
+   <h1 class="judul">
+  <span class="judul-atas">Mutaba'ah Tahfizh</span>
+  <span class="judul-bawah">PPA At Thohir</span>
+</h1>
     </div>
 
     <!-- Form Login -->
@@ -1585,7 +1587,7 @@ async function buatUserNIS() {
 
 <script>
 // ==== SEMESTER FLEX ====
-const SEMESTER_MAX = 12;
+const SEMESTER_MAX = 30;
 
 function isValidSemester(v, max = SEMESTER_MAX) {
   const n = Number(String(v).trim());
@@ -1635,7 +1637,15 @@ function extendSemesterOptions(selectEl, max = SEMESTER_MAX) {
     <label>Jenjang:</label><br>
     <select id="inputJenjang" style="width:90%; margin-bottom:10px;">
   <option value=""></option>
-  <option value="A1">ONLINE</option>
+  <option value="A1">1 SD</option>
+  <option value="A2">2 SD</option>
+  <option value="A3">3 SD</option>
+  <option value="A4">4 SD</option>
+  <option value="A5">5 SD</option>
+  <option value="A6">6 SD</option>
+  <option value="A7">1 SMP</option>
+  <option value="A8">2 SMP</option>
+  <option value="A9">3 SMP</option>
   </select>
 
     <div style="margin-top:10px; display:flex; justify-content:space-between; gap:8px;">
@@ -2413,7 +2423,7 @@ background:rgba(0,0,0,0.5); z-index:999; justify-content:center; align-items:cen
 function aturDropdownKelas(user) {
   const semuaKelas = [  "kelas_012526"];
 
-  const namaKelasCustom = {  kelas_012526: "Ustadzah Muhimmatul Aulia, Nadziro, Nani, Fatia, Zulikha, Dewi Masrufah"};
+  const namaKelasCustom = {  kelas_012526: "Ust. Ahmad Fathoni Muhsinin"};
 
   kelasSelect.innerHTML = "";
 
@@ -2593,7 +2603,7 @@ async function loadSantriData() {
   overlay.style.display = "flex";
 
   // ===== NEW: Konfigurasi & util jenjang (future-proof) =====
-  const JENJANG_MAX = Number(window.JENJANG_MAX ?? 1); // ubah ke 100 / 300 / 1000 sesuai kebutuhan
+  const JENJANG_MAX = Number(window.JENJANG_MAX ?? 9); // ubah ke 100 / 300 / 1000 sesuai kebutuhan
 
   const parseJenjang = (v) => {
     const m = /^A(\d+)$/.exec(String(v || "").trim());
@@ -2899,7 +2909,15 @@ async function loadSantriData() {
           <td class="col-nama">${santri.nama ?? ""}${subTanggal}</td>
           <td>
   <select class="jenjang">
-    <option value="A1" ${jenNow === 'A1' ? 'selected' : ''}>ONLINE</option>
+    <option value="A1" ${jenNow === 'A1' ? 'selected' : ''}>1 SD</option>
+    <option value="A2" ${jenNow === 'A2' ? 'selected' : ''}>2 SD</option>
+    <option value="A3" ${jenNow === 'A3' ? 'selected' : ''}>3 SD</option>
+    <option value="A4" ${jenNow === 'A4' ? 'selected' : ''}>4 SD</option>
+    <option value="A5" ${jenNow === 'A5' ? 'selected' : ''}>5 SD</option>
+    <option value="A6" ${jenNow === 'A6' ? 'selected' : ''}>6 SD</option>
+    <option value="A7" ${jenNow === 'A7' ? 'selected' : ''}>1 SMP</option>
+    <option value="A8" ${jenNow === 'A8' ? 'selected' : ''}>2 SMP</option>
+    <option value="A9" ${jenNow === 'A9' ? 'selected' : ''}>3 SMP</option>
   </select>
 </td>
           <td>
@@ -3619,7 +3637,7 @@ function jenjangLabel(code) {
   // === Helper Kelas/Kelompok ===
   function buildKelasKelompokLine(kelas, kelasEl) {
     const kelasNum = (String(kelas||'').match(/(\d+)/)?.[1]) || (kelas || '-');
-    const custom = window.namaKelasCustom || window.NAMA_KELAS_CUSTOM || {  kelas_012526: "Kelompok Ustadzah Muhimmatul Aulia, Nadziro, Nani, Fatia, Zulikha, Dewi Masrufah"};
+    const custom = window.namaKelasCustom || window.NAMA_KELAS_CUSTOM || {  kelas_012526: "Kelompok Ust. Ahmad Fathoni Muhsinin"};
     let kelompok = custom[kelas] || "";
     if (!kelompok) {
       const optText = kelasEl?.options?.[kelasEl.selectedIndex]?.text?.trim() || "";
@@ -6287,7 +6305,7 @@ kelasSelect?.addEventListener("change", () => loadSantriData());
 
 <script>
   // ====== KONFIG (opsional dari window.*) ======
-  const JENJANG_MAX = Number(window.JENJANG_MAX ?? 1);             // 34 default; 0 = tanpa batas atas
+  const JENJANG_MAX = Number(window.JENJANG_MAX ?? 9);             // 34 default; 0 = tanpa batas atas
   const JENJANG_SAFETY_CAP = Number(window.JENJANG_SAFETY_CAP ?? 1000); // darurat bila tanpa batas
 
   // ====== Helper jenjang dinamis ======
