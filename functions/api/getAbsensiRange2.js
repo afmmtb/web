@@ -8,7 +8,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-const OWNER = "dickypagesdev";
+const OWNER = "afmmtb";
 const REPO  = "server";
 const DEFAULT_BRANCH = "main";
 
